@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#000000">
+<title>ПЕРЕоскар — Голосование</title>
+<style>
+@font-face{font-family:'Grtsk Giga';src:url('fonts/Grtsk-Giga-Bold.ttf') format('truetype');font-weight:700;font-display:swap}
+@font-face{font-family:'Beer Money';src:url('fonts/BeerMoney.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Grtsk Exa';src:url('fonts/Grtsk-Exa-Light.ttf') format('truetype');font-weight:300;font-display:swap}
+:root{--gold:#ffcb05;--gdim:#3d3000;--glt:#ffe566;--blk:#000;--d1:#0a0a0a;--d2:#111;--d3:#1a1a1a;--border:#242424;--txt:#e8e8e8;--muted:#777;--err:#ff4444;--ok:#22c55e;--fh:'Grtsk Giga',Arial,sans-serif;--fa:'Beer Money',cursive;--fb:'Grtsk Exa',Arial,sans-serif;--r:10px;--rs:6px;--max:600px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
+body{background:var(--blk);color:var(--txt);font-family:var(--fb);font-weight:300;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+button{cursor:pointer;font-family:var(--fb)}input{font-family:var(--fb)}
+nav{position:sticky;top:0;z-index:50;background:rgba(0,0,0,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1rem;height:50px}
+.nbrand{font-family:var(--fh);font-size:1.05rem;color:var(--gold);letter-spacing:-.02em}
+.nstatus{display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted)}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex-shrink:0;animation:pulse 2s infinite}
+.sdot.off{background:var(--err);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 1rem}
+#hero{padding:2.8rem 1rem 2.2rem;text-align:center;position:relative;overflow:hidden;background:radial-gradient(ellipse 90% 55% at 50% 0%,#3d300038 0%,transparent 70%)}
+.h-tag{font-family:var(--fa);font-size:.95rem;color:var(--muted);margin-bottom:.6rem;letter-spacing:.04em}
+.h-title{font-family:var(--fh);font-size:clamp(3rem,13vw,5rem);color:var(--gold);line-height:.88;letter-spacing:-.03em;text-shadow:0 0 50px #3d300055;margin-bottom:.35em}
+.h-sub{font-family:var(--fa);font-size:clamp(1rem,4vw,1.4rem);color:#ccc;letter-spacing:.1em;margin-bottom:1rem}
+.h-desc{color:var(--muted);font-size:.88rem;line-height:1.6;max-width:360px;margin:0 auto 1.8rem}
+.h-btns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+.h-slogan{margin-top:2rem;font-family:var(--fa);font-size:.88rem;color:#2a2a2a}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;padding:.8em 1.4em;border-radius:var(--rs);font-family:var(--fb);font-size:.85rem;font-weight:300;letter-spacing:.05em;text-transform:uppercase;border:none;transition:all .15s;min-height:46px;-webkit-appearance:none;text-decoration:none}
+.bg{background:var(--gold);color:var(--blk)}.bg:hover{background:var(--glt)}
+.bo{background:transparent;color:var(--gold);border:1px solid var(--gold)}.bo:hover{background:var(--gdim)}
+.bd{background:var(--d3);color:var(--txt);border:1px solid var(--border)}.bd:hover{border-color:#444}
+.br{background:#2a0000;color:#f88;border:1px solid #4a0000}.br:hover{background:#3a0000}
+.bw{width:100%}.btn:disabled{opacity:.4;pointer-events:none}
+.sec{padding:2.2rem 0;border-top:1px solid var(--border)}
+.stitle{font-family:var(--fh);font-size:clamp(1.4rem,5vw,1.9rem);color:var(--gold);margin-bottom:.25em;letter-spacing:-.02em}
+.slbl{font-family:var(--fa);font-size:.9rem;color:var(--muted);margin-bottom:1.3rem;letter-spacing:.04em}
+.ngrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:.65rem}
+.ncard{background:var(--d2);border:1px solid var(--border);border-radius:var(--r);padding:1rem;display:flex;flex-direction:column;gap:.35rem}
+.nico{font-size:1.5rem}.ntit{font-family:var(--fh);font-size:.87rem;color:var(--txt);font-weight:700;line-height:1.3}
+.ndesc{font-size:.76rem;color:var(--muted);line-height:1.5;flex:1}
+.nbadge{display:inline-block;padding:.2em .55em;border-radius:3px;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;margin-top:.25rem}
+.bpub{background:var(--gdim);color:var(--gold)}.bment{background:var(--d3);color:var(--muted)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:.65rem;justify-items:center}
+.rcard{background:var(--d2);border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1.1rem;display:flex;align-items:flex-start;gap:.65rem;width:100%;max-width:300px}
+.rico{font-size:1.2rem;flex-shrink:0}.rtxt{font-size:.83rem;color:var(--txt);line-height:1.5}
+.prog-wrap{margin-bottom:1.3rem}
+.prog-top{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-bottom:.4rem}
+.pbar{height:3px;background:var(--d3);border-radius:2px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--glt));border-radius:2px;transition:width .35s}
+.name-card{background:var(--d2);border:1px solid var(--border);border-radius:var(--r);padding:1.15rem;margin-bottom:.65rem}
+.name-card.err{border-color:var(--err)}
+.flbl{font-family:var(--fh);font-size:.82rem;color:var(--gold);margin-bottom:.55rem;font-weight:700}
+.ifield{width:100%;background:var(--d1);border:1px solid var(--border);color:var(--txt);padding:.8em 1em;border-radius:var(--rs);font-size:.98rem;outline:none;font-family:var(--fb);transition:border-color .18s;-webkit-appearance:none;display:block}
+.ifield:focus{border-color:var(--gdim)}.ifield.err{border-color:var(--err)}.ifield+.ifield{margin-top:.45rem}
+.vcard{background:var(--d2);border:1px solid var(--border);border-radius:var(--r);padding:1.15rem;margin-bottom:.65rem}
+.vcard.err{border-color:var(--err)}
+.vhdr{display:flex;align-items:center;gap:.45rem;margin-bottom:.2rem}
+.vico{font-size:1.1rem;flex-shrink:0}.vtit{font-family:var(--fh);font-size:.87rem;color:var(--gold);font-weight:700;flex:1}
+.verr{font-size:.7rem;color:var(--err);display:none}.vcard.err .verr{display:block}
+.vdesc{font-size:.76rem;color:var(--muted);margin-bottom:.8rem}
+.cand{display:flex;align-items:center;gap:.7rem;padding:.8rem .95rem;border-radius:var(--rs);border:1px solid var(--border);margin-bottom:.45rem;cursor:pointer;transition:all .13s;background:var(--d1);-webkit-user-select:none;user-select:none;min-height:50px}
+.cand:active{transform:scale(.98)}.cand.sel{background:var(--gdim);border-color:var(--gold)}
+.crad{width:20px;height:20px;border-radius:50%;border:2px solid #444;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .13s}
+.cand.sel .crad{border-color:var(--gold);background:var(--gold)}
+.cdot{width:8px;height:8px;border-radius:50%;background:var(--blk);display:none}.cand.sel .cdot{display:block}
+.cinfo{flex:1;min-width:0}.cname{font-family:var(--fh);font-size:.88rem;color:var(--txt);font-weight:700}
+.cand.sel .cname{color:var(--gold)}.cfilm{font-size:.72rem;color:var(--muted)}.cand.sel .cfilm{color:#8a6c0a}
+.vacts{display:flex;flex-direction:column;gap:.65rem;margin-top:1.3rem}
+.scr{display:none}.scr.on{display:block}
+.clist{display:flex;flex-direction:column;gap:.45rem;margin-bottom:1.3rem}
+.crow{display:flex;justify-content:space-between;align-items:center;gap:.6rem;background:var(--d2);border:1px solid var(--border);border-radius:var(--rs);padding:.8rem 1rem}
+.cnom{font-size:.76rem;color:var(--muted);flex:1}.cpick{font-family:var(--fh);font-size:.82rem;color:var(--gold);font-weight:700;text-align:right}
+.cacts{display:flex;flex-direction:column;gap:.65rem}
+.done{text-align:center;padding:2.5rem 1rem}.dico{font-size:4rem;margin-bottom:.9rem}
+.dtit{font-family:var(--fh);font-size:clamp(1.5rem,6vw,2rem);color:var(--gold);margin-bottom:.45rem;font-weight:700}
+.dsub{color:var(--muted);font-size:.88rem;line-height:1.6}
+#toast{position:fixed;bottom:1.3rem;left:50%;transform:translateX(-50%) translateY(70px);background:var(--d3);color:var(--txt);border:1px solid var(--border);border-radius:var(--rs);padding:.7rem 1.1rem;font-size:.82rem;z-index:200;max-width:calc(100vw - 2rem);transition:transform .25s;text-align:center;pointer-events:none}
+#toast.on{transform:translateX(-50%) translateY(0)}
+#toast.terr{border-color:var(--err);color:#ff9090}#toast.tok{border-color:var(--ok);color:#86efac}
+#admtgl{position:fixed;bottom:1.3rem;right:1rem;z-index:100;background:var(--d2);border:1px solid var(--border);color:var(--muted);font-size:.72rem;padding:.45em .85em;border-radius:20px;letter-spacing:.03em}
+#admpanel{display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.98);overflow-y:auto}
+#admpanel.on{display:block}
+.admhdr{position:sticky;top:0;background:var(--d1);border-bottom:1px solid var(--border);padding:.85rem 1rem;display:flex;align-items:center;justify-content:space-between;z-index:10}
+.admtit{font-family:var(--fh);color:var(--gold);font-size:1rem;font-weight:700}
+.admx{background:none;border:none;color:var(--muted);font-size:1.3rem;padding:0 .2rem;line-height:1}
+.admbody{max-width:var(--max);margin:0 auto;padding:1.3rem 1rem}
+.asec{margin-bottom:1.8rem}
+.asectit{font-family:var(--fh);color:var(--gold);font-size:.8rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:.85rem}
+.arow{display:flex;gap:.45rem;flex-wrap:wrap}
+.acard{background:var(--d2);border:1px solid var(--border);border-radius:var(--rs);padding:.7rem 1rem;flex:1;min-width:110px}
+.snum{font-family:var(--fh);font-size:1.7rem;color:var(--gold);font-weight:700}.slbl{font-size:.7rem;color:var(--muted);margin-top:.1rem}
+.resc{background:var(--d2);border:1px solid var(--border);border-radius:var(--r);padding:.95rem;margin-bottom:.55rem}
+.reshdr{display:flex;align-items:center;gap:.45rem;margin-bottom:.65rem}
+.resico{font-size:1rem}.restit{font-family:var(--fh);font-size:.82rem;color:var(--gold);font-weight:700;flex:1}
+.rescand{display:flex;align-items:center;gap:.45rem;margin-bottom:.35rem}
+.resname{font-size:.77rem;color:var(--txt);flex:1}.rescnt{font-size:.72rem;color:var(--gold);font-weight:700;min-width:20px;text-align:right}
+.resbw{height:3px;background:var(--d3);border-radius:2px;overflow:hidden;width:100%}.resb{height:100%;background:var(--gold);border-radius:2px}
+.recitem{display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--border);font-size:.78rem}
+.recname{color:var(--txt)}.rectime{color:var(--muted);font-size:.7rem}
+#admlgn{text-align:center;padding:2.5rem 1rem}.algtit{font-family:var(--fh);color:var(--gold);font-size:1.2rem;margin-bottom:1.3rem}
+.etabs{display:flex;gap:.4rem;margin-bottom:.85rem;flex-wrap:wrap}
+.etab{padding:.45em .9em;border-radius:var(--rs);font-size:.78rem;background:var(--d3);color:var(--muted);border:1px solid var(--border);cursor:pointer}
+.etab.on{background:var(--gdim);color:var(--gold);border-color:var(--gdim)}
+.epane{display:none}.epane.on{display:block}
+.ecard{background:var(--d2);border:1px solid var(--border);border-radius:var(--r);padding:.95rem;margin-bottom:.55rem}
+.etog{width:34px;height:18px;border-radius:9px;background:var(--d3);border:1px solid #444;cursor:pointer;position:relative;transition:background .18s;flex-shrink:0}
+.etog.on{background:var(--gold);border-color:var(--gold)}
+.etog::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#666;transition:all .18s}
+.etog.on::after{left:18px;background:var(--blk)}
+.ecrow{display:flex;align-items:center;gap:.4rem;margin-bottom:.35rem}
+.ecinput{flex:1;background:var(--d1);border:1px solid var(--border);color:var(--txt);padding:.45em .65em;border-radius:var(--rs);font-size:.8rem;outline:none}
+.evrow{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.85rem}
+.evrow label{font-size:.74rem;color:var(--muted)}
+.spin{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:sp .65s linear infinite;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ldwrap{display:flex;align-items:center;justify-content:center;min-height:35vh;flex-direction:column;gap:.85rem}
+@media(min-width:480px){.cacts,.vacts{flex-direction:row;justify-content:flex-end}.h-btns{gap:.85rem}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nbrand">ПЕРЕоскар</div>
+  <div class="nstatus"><div class="sdot" id="sdot"></div><span id="stxt">Загрузка…</span></div>
+</nav>
+<main>
+  <div id="app-ld" class="ldwrap" style="padding:3rem 1rem"><div class="spin"></div><div style="color:var(--muted);font-size:.85rem">Загружаем мероприятие…</div></div>
+  <div id="app-err" style="display:none;text-align:center;padding:3rem 1rem">
+    <div style="font-size:2rem;margin-bottom:.85rem">⚠️</div>
+    <div class="stitle" style="color:var(--txt)">Нет соединения</div>
+    <div style="color:var(--muted);margin:1rem 0 1.3rem;font-size:.88rem">Не удалось загрузить данные.<br>Проверь интернет и обнови страницу.</div>
+    <button class="btn bg" onclick="location.reload()">Обновить</button>
+  </div>
+  <div id="app" style="display:none">
+    <section id="hero">
+      <div class="h-tag" id="h-season">Лето 2026</div>
+      <h1 class="h-title" id="h-title">ПЕРЕоскар</h1>
+      <div class="h-sub" id="h-sub">Кинопремия ПЕРЕХОДА</div>
+      <div class="h-desc">Голосует ПЕРЕакадемия. Выбери лучших в каждой номинации и подтверди свой голос.</div>
+      <div class="h-btns">
+        <a href="#nominations" class="btn bo">Номинации</a>
+        <a href="#vote" class="btn bg">Голосовать ↓</a>
+      </div>
+      <div class="h-slogan" id="h-slogan">Камера. Мотор. ПЕРЕоскар.</div>
+    </section>
+    <section class="sec wrap" id="nominations">
+      <h2 class="stitle">Номинации</h2>
+      <div class="slbl">Лучшие кадры, роли и решения этого вечера</div>
+      <div class="ngrid" id="ngrid"></div>
+      <div style="margin-top:.85rem;padding:.8rem 1rem;background:var(--d2);border-radius:var(--rs);color:var(--muted);font-size:.77rem;border-left:3px solid var(--gdim)">⭐ «Приз ПЕРЕакадемии» — особая номинация. Её выбирают наставники.</div>
+    </section>
+    <section class="sec wrap">
+      <h2 class="stitle">Правила голосования</h2>
+      <div class="rgrid" id="rgrid"></div>
+    </section>
+    <section class="sec wrap" id="vote">
+      <h2 class="stitle">Голосование</h2>
+      <div class="slbl">Голосует ПЕРЕакадемия</div>
+      <div class="scr" id="scr-closed"><div class="done"><div style="font-size:2.5rem;margin-bottom:.85rem">🔒</div><div class="stitle" style="font-size:1.3rem;color:var(--txt)">Голосование закрыто</div><div style="color:var(--muted);margin-top:.65rem;font-size:.88rem">Организаторы завершили приём голосов. Ожидай результатов!</div></div></div>
+      <div class="scr" id="scr-already"><div class="done"><div class="dico">✅</div><div class="dtit">Голос принят!</div><div class="dsub">С этого устройства уже проголосовали.<br>Ожидай церемонии награждения!</div></div></div>
+      <div class="scr on" id="scr-form">
+        <div class="prog-wrap"><div class="prog-top"><span id="ptxt">Заполнено 0 из …</span><span id="ppct">0%</span></div><div class="pbar"><div class="pfill" id="pfill" style="width:0%"></div></div></div>
+        <div class="name-card" id="namec">
+          <div class="flbl">Твоё имя</div>
+          <input class="ifield" id="f-name" type="text" placeholder="Введи своё имя…" autocomplete="name">
+          <input class="ifield" id="f-team" type="text" placeholder="Твоя команда (необязательно)…" autocomplete="off">
+        </div>
+        <div id="vnoms"></div>
+        <div class="vacts"><button class="btn bg bw" id="btn-check" onclick="goConfirm()">Проверить голос →</button></div>
+      </div>
+      <div class="scr" id="scr-confirm">
+        <h3 class="stitle" style="font-size:1.2rem;margin-bottom:.25em">Проверь голос</h3>
+        <div style="color:var(--muted);font-size:.83rem;margin-bottom:1.3rem">Убедись, что всё верно, и нажми «Подтвердить»</div>
+        <div class="clist" id="clist"></div>
+        <div class="cacts"><button class="btn bd" onclick="showScr('form')">← Изменить</button><button class="btn bg" id="btn-sub" onclick="submitVote()">Подтвердить ✓</button></div>
+      </div>
+      <div class="scr" id="scr-done"><div class="done"><div class="dico">🏆</div><div class="dtit" id="done-name">Спасибо!</div><div class="dsub">Твой голос в ПЕРЕакадемии учтён.<br>Ожидай церемонии награждения!</div><div style="margin-top:1.5rem;font-family:var(--fa);color:var(--muted);font-size:.82rem">Это не Голливуд. Это ПЕРЕХОД.</div></div></div>
+    </section>
+  </div>
+</main>
+<div id="toast"></div>
+<button id="admtgl" onclick="openAdm()">⚙ Админ</button>
+<div id="admpanel">
+  <div class="admhdr"><div class="admtit">⚙ Панель администратора</div><button class="admx" onclick="closeAdm()">✕</button></div>
+  <div class="admbody">
+    <div id="admlgn"><div class="algtit">Вход для администратора</div><div style="max-width:300px;margin:0 auto"><input class="ifield" id="apw" type="password" placeholder="Пароль…" onkeydown="if(event.key==='Enter')admLogin()"><button class="btn bg bw" style="margin-top:.65rem" onclick="admLogin()">Войти</button></div></div>
+    <div id="admdash" style="display:none">
+      <div class="asec"><div class="asectit">Статистика</div><div class="arow"><div class="acard"><div class="snum" id="s-total">0</div><div class="slbl">Голосов</div></div><div class="acard"><div class="snum" id="s-status">—</div><div class="slbl">Статус</div></div></div></div>
+      <div class="asec"><div class="asectit">Управление</div><div class="arow"><button class="btn bg" onclick="admAction('open')">▶ Открыть</button><button class="btn bd" onclick="admAction('close')">⏹ Закрыть</button><button class="btn bo" onclick="admExport('Csv')">↓ CSV</button><button class="btn bo" onclick="admExport('Json')">↓ JSON</button><button class="btn br" onclick="admClear()">✕ Очистить</button></div></div>
+      <div class="asec"><div class="asectit">Результаты <span style="font-size:.68rem;color:var(--muted);font-weight:300;margin-left:.4rem">каждые 3 сек</span></div><div id="admres"><div style="color:var(--muted);font-size:.82rem">Загрузка…</div></div></div>
+      <div class="asec"><div class="asectit">Последние голоса</div><div id="admrec"></div></div>
+      <div class="asec">
+        <div class="asectit">Редактирование</div>
+        <div class="etabs"><button class="etab on" onclick="admTab(this,'ep-noms')">Номинации</button><button class="etab" onclick="admTab(this,'ep-event')">Мероприятие</button><button class="etab" onclick="admTab(this,'ep-rules')">Правила</button></div>
+        <div class="epane on" id="ep-noms"><div id="enoms"></div><button class="btn bd" style="font-size:.78rem" onclick="admSaveNoms()">Сохранить номинации</button></div>
+        <div class="epane" id="ep-event">
+          <div class="evrow"><label>Название</label><input class="ifield" id="ev-t"></div>
+          <div class="evrow"><label>Подзаголовок</label><input class="ifield" id="ev-s"></div>
+          <div class="evrow"><label>Сезон</label><input class="ifield" id="ev-se"></div>
+          <div class="evrow"><label>Слоган</label><input class="ifield" id="ev-sl"></div>
+          <button class="btn bd" style="font-size:.78rem" onclick="admSaveEvent()">Сохранить</button>
+        </div>
+        <div class="epane" id="ep-rules"><div id="erules"></div><button class="btn bo" style="font-size:.78rem;margin-bottom:.65rem" onclick="admAddRule()">+ Правило</button><button class="btn bd" style="font-size:.78rem" onclick="admSaveRules()">Сохранить правила</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// ── URL Google Apps Script ─────────────────────────────────────
+var SCRIPT_URL = '/.netlify/functions/gs';
+
+// ── Device ID ──────────────────────────────────────────────────
+function getDeviceId(){var id=localStorage.getItem('pero_did');if(!id){id='D'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);localStorage.setItem('pero_did',id);}return id;}
+var DID=getDeviceId();
+
+// ── State ──────────────────────────────────────────────────────
+var CFG=null,SEL={},TOKEN=null,rtimer=null;
+
+// ── API — всё через GET ────────────────────────────────────────
+function api(params){
+  var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
+  if(TOKEN) qs+='&token='+encodeURIComponent(TOKEN);
+  return fetch(SCRIPT_URL+'?'+qs)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.error&&!d.ok) throw Object.assign(new Error(d.error),{data:d});
+      return d;
+    });
+}
+
+// ── Toast ──────────────────────────────────────────────────────
+var ttimer;
+function toast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='on '+(type||'');clearTimeout(ttimer);ttimer=setTimeout(function(){el.className='';},3000);}
+
+// ── Screen ─────────────────────────────────────────────────────
+function showScr(name){document.querySelectorAll('#vote .scr').forEach(function(s){s.classList.remove('on');});var el=document.getElementById('scr-'+name);if(el)el.classList.add('on');}
+
+// ── Load ───────────────────────────────────────────────────────
+function loadConfig(){
+  api({action:'config'}).then(function(cfg){
+    CFG=cfg;
+    document.getElementById('app-ld').style.display='none';
+    document.getElementById('app').style.display='block';
+    render();setStatus(cfg.event.is_voting_open);
+    if(localStorage.getItem('pero_voted_'+(cfg.event.season||'x'))){showScr('already');}
+    else if(!cfg.event.is_voting_open){showScr('closed');}
+  }).catch(function(){
+    document.getElementById('app-ld').style.display='none';
+    document.getElementById('app-err').style.display='block';
+  });
+}
+
+function setStatus(open){document.getElementById('sdot').className='sdot'+(open?'':' off');document.getElementById('stxt').textContent=open?'Голосование открыто':'Голосование закрыто';}
+
+// ── Render ─────────────────────────────────────────────────────
+function render(){
+  var ev=CFG.event;
+  document.getElementById('h-title').textContent=ev.title;
+  document.getElementById('h-sub').textContent=ev.subtitle;
+  document.getElementById('h-season').textContent=ev.season;
+  document.getElementById('h-slogan').textContent=ev.slogan;
+  document.title=ev.title+' — Голосование';
+  renderNoms();renderRules();renderForm();updProg();
+}
+
+function renderNoms(){
+  var g=document.getElementById('ngrid');g.innerHTML='';
+  CFG.nominations.forEach(function(n){
+    if(!n.enabled)return;
+    var d=document.createElement('div');d.className='ncard';
+    var mentor=!n.public_vote;
+    d.innerHTML='<div class="nico">'+n.icon+'</div><div class="ntit">'+n.title+'</div><div class="ndesc">'+n.description+'</div><div><span class="nbadge '+(mentor?'bment':'bpub')+'">'+(mentor?'Голосуют Наставники':'Голосуют подростки')+'</span></div>';
+    g.appendChild(d);
+  });
+}
+
+function renderRules(){
+  var g=document.getElementById('rgrid');g.innerHTML='';
+  CFG.votingRules.forEach(function(r){var d=document.createElement('div');d.className='rcard';d.innerHTML='<span class="rico">'+r.icon+'</span><span class="rtxt">'+r.text+'</span>';g.appendChild(d);});
+}
+
+function renderForm(){
+  var cont=document.getElementById('vnoms');cont.innerHTML='';
+  var pub=CFG.nominations.filter(function(n){return n.enabled&&n.public_vote;});
+  var total=pub.filter(function(n){return n.required;}).length;
+  document.getElementById('ptxt').textContent='Заполнено 0 из '+total;
+  pub.forEach(function(nom){
+    var card=document.createElement('div');card.className='vcard';card.id='vnom-'+nom.slug;
+    var items=nom.candidates_from==='films'
+      ?CFG.films.map(function(f){return{id:f.id,name:f.title,sub:f.team};})
+      :(nom.candidates||[]).map(function(c){return{id:c.id,name:c.name,sub:c.film_title||c.team||''};});
+    var ch=items.map(function(c){
+      return '<div class="cand" id="c-'+nom.slug+'-'+c.id+'" onclick="pick(\''+nom.slug+'\',\''+c.id+'\')">'
+        +'<div class="crad"><div class="cdot"></div></div>'
+        +'<div class="cinfo"><div class="cname">'+c.name+'</div>'+(c.sub?'<div class="cfilm">'+c.sub+'</div>':'')+'</div></div>';
+    }).join('');
+    card.innerHTML='<div class="vhdr"><span class="vico">'+nom.icon+'</span><span class="vtit">'+nom.title+'</span><span class="verr">⚠ Выбери кандидата</span></div><div class="vdesc">'+nom.description+'</div>'+ch;
+    cont.appendChild(card);
+  });
+}
+
+function pick(slug,cid){
+  SEL[slug]=cid;
+  var nom=CFG.nominations.find(function(n){return n.slug===slug;});
+  var ids=nom.candidates_from==='films'?CFG.films.map(function(f){return f.id;}):(nom.candidates||[]).map(function(c){return c.id;});
+  ids.forEach(function(id){var el=document.getElementById('c-'+slug+'-'+id);if(el)el.classList.toggle('sel',id===cid);});
+  var card=document.getElementById('vnom-'+slug);if(card)card.classList.remove('err');
+  updProg();
+}
+
+function updProg(){
+  if(!CFG)return;
+  var req=CFG.nominations.filter(function(n){return n.enabled&&n.public_vote&&n.required;});
+  var filled=req.filter(function(n){return SEL[n.slug];}).length,total=req.length,pct=total?Math.round(filled/total*100):0;
+  document.getElementById('pfill').style.width=pct+'%';
+  document.getElementById('ptxt').textContent='Заполнено '+filled+' из '+total;
+  document.getElementById('ppct').textContent=pct+'%';
+}
+
+function goConfirm(){
+  var err=false;
+  var name=document.getElementById('f-name').value.trim();
+  var nc=document.getElementById('namec'),ni=document.getElementById('f-name');
+  if(!name){nc.classList.add('err');ni.classList.add('err');err=true;}else{nc.classList.remove('err');ni.classList.remove('err');}
+  CFG.nominations.filter(function(n){return n.enabled&&n.public_vote&&n.required;}).forEach(function(nom){
+    var card=document.getElementById('vnom-'+nom.slug);
+    if(!SEL[nom.slug]){if(card)card.classList.add('err');err=true;}else{if(card)card.classList.remove('err');}
+  });
+  if(err){var first=document.querySelector('.vcard.err,.name-card.err');if(first)first.scrollIntoView({behavior:'smooth',block:'center'});toast('Заполни все обязательные поля','terr');return;}
+  var list=document.getElementById('clist');list.innerHTML='';
+  var team=document.getElementById('f-team').value.trim();
+  var nr=document.createElement('div');nr.className='crow';
+  nr.innerHTML='<span class="cnom">Участник</span><span class="cpick">'+name+(team?' · '+team:'')+'</span>';
+  list.appendChild(nr);
+  CFG.nominations.filter(function(n){return n.enabled&&n.public_vote;}).forEach(function(nom){
+    var s=SEL[nom.slug];if(!s)return;
+    var label=s;
+    if(nom.candidates_from==='films'){var f=CFG.films.find(function(x){return x.id===s;});if(f)label=f.title+' — '+f.team;}
+    else{var c=(nom.candidates||[]).find(function(x){return x.id===s;});if(c)label=c.name+(c.film_title?' · '+c.film_title:'');}
+    var row=document.createElement('div');row.className='crow';
+    row.innerHTML='<span class="cnom">'+nom.title+'</span><span class="cpick">'+label+'</span>';
+    list.appendChild(row);
+  });
+  showScr('confirm');
+  document.getElementById('vote').scrollIntoView({behavior:'smooth'});
+}
+
+function submitVote(){
+  var btn=document.getElementById('btn-sub');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
+  var name=document.getElementById('f-name').value.trim();
+  var team=document.getElementById('f-team').value.trim();
+  api({action:'vote',deviceId:DID,voterName:name,voterTeam:team,answers:JSON.stringify(SEL)})
+    .then(function(){
+      localStorage.setItem('pero_voted_'+(CFG.event.season||'x'),'1');
+      document.getElementById('done-name').textContent='Спасибо, '+name+'!';
+      showScr('done');
+      document.getElementById('vote').scrollIntoView({behavior:'smooth'});
+    })
+    .catch(function(err){
+      btn.disabled=false;btn.textContent='Подтвердить ✓';
+      var d=err.data||{};
+      if(d.error==='already_voted'){toast('С этого устройства уже голосовали','terr');localStorage.setItem('pero_voted_'+(CFG.event.season||'x'),'1');showScr('already');}
+      else if(d.error==='voting_closed'){toast('Голосование закрыто','terr');showScr('closed');setStatus(false);}
+      else if(!navigator.onLine){toast('Нет интернета. Проверь соединение.','terr');}
+      else{toast('Ошибка отправки. Попробуй ещё раз.','terr');}
+    });
+}
+
+// ── Admin ──────────────────────────────────────────────────────
+function openAdm(){document.getElementById('admpanel').classList.add('on');}
+function closeAdm(){document.getElementById('admpanel').classList.remove('on');stopRes();}
+function admLogin(){
+  var pw=document.getElementById('apw').value;
+  api({action:'login',password:pw}).then(function(r){
+    TOKEN=r.token;
+    document.getElementById('admlgn').style.display='none';
+    document.getElementById('admdash').style.display='block';
+    admLoadAll();startRes();
+  }).catch(function(){toast('Неверный пароль','terr');});
+}
+function admAction(act){
+  api({action:act}).then(function(r){
+    var open=r.is_voting_open;setStatus(open);if(CFG)CFG.event.is_voting_open=open;
+    toast(open?'Голосование открыто':'Голосование закрыто','tok');
+  }).catch(function(){toast('Ошибка','terr');});
+}
+function admExport(fmt){
+  api({action:'export'+fmt}).then(function(data){
+    var content,mime,ext;
+    if(fmt==='Csv'){content='\uFEFF'+(data.csv||'');mime='text/csv';ext='csv';}
+    else{content=JSON.stringify(data,null,2);mime='application/json';ext='json';}
+    var blob=new Blob([content],{type:mime});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='pereostar-votes.'+ext;a.click();
+  }).catch(function(){toast('Ошибка экспорта','terr');});
+}
+function admClear(){
+  if(!confirm('Удалить ВСЕ голоса? Это необратимо.'))return;
+  api({action:'clear'}).then(function(){
+    toast('Голоса удалены','tok');
+    renderRes({total:0,summary:{},recent:[]});
+    document.getElementById('s-total').textContent='0';
+  }).catch(function(){toast('Ошибка','terr');});
+}
+function startRes(){loadRes();rtimer=setInterval(loadRes,3000);}
+function stopRes(){clearInterval(rtimer);}
+function loadRes(){if(!TOKEN)return;api({action:'results'}).then(renderRes).catch(function(){});}
+function renderRes(data){
+  document.getElementById('s-total').textContent=data.total||0;
+  document.getElementById('s-status').textContent=(CFG&&CFG.event.is_voting_open)?'Открыто':'Закрыто';
+  var rc=document.getElementById('admres');rc.innerHTML='';
+  if(!data.summary||!Object.keys(data.summary).length){rc.innerHTML='<div style="color:var(--muted);font-size:.8rem">Голосов пока нет</div>';return;}
+  Object.entries(data.summary).forEach(function(entry){
+    var s=entry[1];var card=document.createElement('div');card.className='resc';
+    var rows=(s.results||[]).map(function(r){var pct=s.total?Math.round(r.count/s.total*100):0;return'<div class="rescand"><span class="resname">'+r.label+'</span><span class="rescnt">'+r.count+'</span></div><div class="resbw"><div class="resb" style="width:'+pct+'%"></div></div>';}).join('');
+    card.innerHTML='<div class="reshdr"><span class="resico">'+s.icon+'</span><span class="restit">'+s.title+'</span><span style="margin-left:auto;font-size:.7rem;color:var(--muted)">'+s.total+' гол.</span></div>'+(rows||'<div style="color:var(--muted);font-size:.76rem">Нет голосов</div>');
+    rc.appendChild(card);
+  });
+  var rec=document.getElementById('admrec');rec.innerHTML='';
+  (data.recent||[]).forEach(function(v){var el=document.createElement('div');el.className='recitem';var t=v.time?new Date(v.time).toLocaleTimeString('ru'):'';el.innerHTML='<span class="recname">'+v.voterName+(v.voterTeam?' <span style="color:var(--muted)">· '+v.voterTeam+'</span>':'')+'</span><span class="rectime">'+t+'</span>';rec.appendChild(el);});
+}
+function admTab(btn,pid){document.querySelectorAll('.etab').forEach(function(t){t.classList.remove('on');});document.querySelectorAll('.epane').forEach(function(p){p.classList.remove('on');});btn.classList.add('on');document.getElementById(pid).classList.add('on');}
+function admLoadAll(){
+  api({action:'config'}).then(function(cfg){
+    CFG=cfg;render();
+    document.getElementById('ev-t').value=cfg.event.title;
+    document.getElementById('ev-s').value=cfg.event.subtitle;
+    document.getElementById('ev-se').value=cfg.event.season;
+    document.getElementById('ev-sl').value=cfg.event.slogan;
+    renderEditNoms(cfg.nominations);renderEditRules(cfg.votingRules);
+  });
+}
+function renderEditNoms(noms){
+  var list=document.getElementById('enoms');list.innerHTML='';
+  noms.forEach(function(nom,ni){
+    var card=document.createElement('div');card.className='ecard';card.dataset.slug=nom.slug;
+    var cands='';
+    if(nom.candidates_from!=='films'){
+      cands=(nom.candidates||[]).map(function(c,ci){
+        return'<div class="ecrow" id="cr-'+ni+'-'+ci+'">'
+          +'<input class="ecinput" placeholder="Имя" value="'+c.name+'" data-f="name">'
+          +'<input class="ecinput" placeholder="Фильм" value="'+(c.film_title||'')+'" data-f="film_title" style="max-width:120px">'
+          +'<button class="btn br" style="min-height:30px;padding:.3em .6em;font-size:.72rem" onclick="this.closest(\'.ecrow\').remove()">✕</button></div>';
+      }).join('');
+    }else{cands='<div style="color:var(--muted);font-size:.75rem;padding:.4rem 0">Кандидаты — фильмы мероприятия</div>';}
+    card.innerHTML='<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.65rem">'
+      +'<div class="etog '+(nom.enabled?'on':'')+'" onclick="this.classList.toggle(\'on\')"></div>'
+      +'<div style="font-family:var(--fh);font-size:.85rem;color:var(--txt);flex:1">'+nom.icon+' '+nom.title+'</div>'
+      +'<span style="font-size:.68rem;color:var(--muted)">'+(nom.public_vote?'публичная':'наставники')+'</span></div>'
+      +'<div id="ecands-'+ni+'">'+cands+'</div>'
+      +(nom.candidates_from!=='films'?'<button class="btn bo" style="font-size:.72rem;min-height:28px;padding:.3em .7em;margin-top:.35rem" onclick="admAddCand('+ni+')">+ Кандидат</button>':'');
+    list.appendChild(card);
+  });
+}
+function admAddCand(ni){
+  var cont=document.getElementById('ecands-'+ni);
+  var row=document.createElement('div');row.className='ecrow';
+  row.innerHTML='<input class="ecinput" placeholder="Имя" data-f="name"><input class="ecinput" placeholder="Фильм" data-f="film_title" style="max-width:120px"><button class="btn br" style="min-height:30px;padding:.3em .6em;font-size:.72rem" onclick="this.closest(\'.ecrow\').remove()">✕</button>';
+  cont.appendChild(row);
+}
+function admSaveNoms(){
+  var cards=document.querySelectorAll('#enoms .ecard');
+  var noms=Array.from(cards).map(function(card){
+    var slug=card.dataset.slug;
+    var orig=CFG.nominations.find(function(n){return n.slug===slug;})||{};
+    var enabled=card.querySelector('.etog').classList.contains('on');
+    var rows=card.querySelectorAll('.ecrow');
+    var candidates=Array.from(rows).map(function(row){return{name:row.querySelector('[data-f=name]').value.trim(),film_title:row.querySelector('[data-f=film_title]').value.trim()};}).filter(function(c){return c.name;});
+    return Object.assign({},orig,{enabled:enabled,candidates:candidates});
+  });
+  api({action:'saveConfig',nominations:JSON.stringify(noms)})
+    .then(function(){admLoadAll();toast('Номинации сохранены','tok');})
+    .catch(function(){toast('Ошибка','terr');});
+}
+function admSaveEvent(){
+  var ev={title:document.getElementById('ev-t').value,subtitle:document.getElementById('ev-s').value,season:document.getElementById('ev-se').value,slogan:document.getElementById('ev-sl').value};
+  api({action:'saveConfig',event:JSON.stringify(ev)}).then(function(){admLoadAll();toast('Сохранено','tok');}).catch(function(){toast('Ошибка','terr');});
+}
+function renderEditRules(rules){
+  var list=document.getElementById('erules');list.innerHTML='';
+  rules.forEach(function(r){var row=document.createElement('div');row.className='ecrow';row.style.marginBottom='.35rem';row.innerHTML='<input class="ecinput" value="'+r.icon+'" style="max-width:48px"><input class="ecinput" value="'+r.text+'"><button class="btn br" style="min-height:30px;padding:.3em .6em;font-size:.72rem" onclick="this.closest(\'.ecrow\').remove()">✕</button>';list.appendChild(row);});
+}
+function admAddRule(){var list=document.getElementById('erules');var row=document.createElement('div');row.className='ecrow';row.style.marginBottom='.35rem';row.innerHTML='<input class="ecinput" placeholder="✅" style="max-width:48px"><input class="ecinput" placeholder="Текст правила"><button class="btn br" style="min-height:30px;padding:.3em .6em;font-size:.72rem" onclick="this.closest(\'.ecrow\').remove()">✕</button>';list.appendChild(row);}
+function admSaveRules(){
+  var rows=document.querySelectorAll('#erules .ecrow');
+  var rules=Array.from(rows).map(function(r){var ins=r.querySelectorAll('input');return{icon:ins[0].value.trim()||'✅',text:ins[1].value.trim()};}).filter(function(r){return r.text;});
+  api({action:'saveConfig',votingRules:JSON.stringify(rules)}).then(function(){admLoadAll();toast('Правила сохранены','tok');}).catch(function(){toast('Ошибка','terr');});
+}
+loadConfig();
+</script>
+</body>
+</html>
