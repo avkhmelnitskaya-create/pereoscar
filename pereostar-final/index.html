@@ -209,7 +209,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(0,0,0,.97);backdrop-filter:
 </div>
 <script>
 // ── URL Google Apps Script ─────────────────────────────────────
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLuI6N2gO6hUKD11WLpIjcBujKGYZCv8Hdrn-1oq1Cj3DnoVCNeJDudbxSovRsyUWG/exec';
+var SCRIPT_URL = '/gs';
 
 // ── Device ID ──────────────────────────────────────────────────
 function getDeviceId(){var id=localStorage.getItem('pero_did');if(!id){id='D'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);localStorage.setItem('pero_did',id);}return id;}
@@ -218,52 +218,23 @@ var DID=getDeviceId();
 // ── State ──────────────────────────────────────────────────────
 var CFG=null,SEL={},TOKEN=null,rtimer=null;
 
-// ── API через JSONP — работает без прокси ──────────────────────
-var _cbCount = 0;
+// ── API через Cloudflare Function прокси ───────────────────────
 function api(params) {
-  return new Promise(function(resolve, reject) {
-    var cbName = '_gs_cb_' + (++_cbCount) + '_' + Date.now();
-    var timer = setTimeout(function() {
-      cleanup();
-      reject(new Error('Timeout'));
-    }, 20000);
-
-    function cleanup() {
-      clearTimeout(timer);
-      delete window[cbName];
-      var s = document.getElementById(cbName);
-      if (s) s.parentNode.removeChild(s);
-    }
-
-    window[cbName] = function(data) {
-      cleanup();
-      if (data && data.error && !data.ok) {
-        var err = new Error(data.error);
-        err.data = data;
-        reject(err);
-      } else {
-        resolve(data);
+  var p = Object.assign({}, params);
+  if (TOKEN) p.token = TOKEN;
+  var qs = Object.keys(p).map(function(k) {
+    return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]);
+  }).join('&');
+  return fetch(SCRIPT_URL + '?' + qs)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error && !d.ok) {
+        var err = new Error(d.error);
+        err.data = d;
+        throw err;
       }
-    };
-
-    var p = {};
-    Object.keys(params).forEach(function(k) { p[k] = params[k]; });
-    p.callback = cbName;
-    if (TOKEN) p.token = TOKEN;
-
-    var qs = Object.keys(p).map(function(k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]);
-    }).join('&');
-
-    var script = document.createElement('script');
-    script.id = cbName;
-    script.src = SCRIPT_URL + '?' + qs;
-    script.onerror = function() {
-      cleanup();
-      reject(new Error('Script load error'));
-    };
-    document.head.appendChild(script);
-  });
+      return d;
+    });
 }
 
 
