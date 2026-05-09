@@ -209,7 +209,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(0,0,0,.97);backdrop-filter:
 </div>
 <script>
 // ── URL Google Apps Script ─────────────────────────────────────
-var SCRIPT_URL = '/.netlify/functions/gs';
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLuI6N2gO6hUKD11WLpIjcBujKGYZCv8Hdrn-1oq1Cj3DnoVCNeJDudbxSovRsyUWG/exec';
 
 // ── Device ID ──────────────────────────────────────────────────
 function getDeviceId(){var id=localStorage.getItem('pero_did');if(!id){id='D'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);localStorage.setItem('pero_did',id);}return id;}
@@ -218,16 +218,45 @@ var DID=getDeviceId();
 // ── State ──────────────────────────────────────────────────────
 var CFG=null,SEL={},TOKEN=null,rtimer=null;
 
-// ── API — всё через GET ────────────────────────────────────────
-function api(params){
-  var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
-  if(TOKEN) qs+='&token='+encodeURIComponent(TOKEN);
-  return fetch(SCRIPT_URL+'?'+qs)
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(d.error&&!d.ok) throw Object.assign(new Error(d.error),{data:d});
-      return d;
-    });
+// ── API через JSONP — решает CORS без серверного прокси ────────
+var _cbCount = 0;
+function api(params) {
+  return new Promise(function(resolve, reject) {
+    var cbName = '_gs_cb_' + (++_cbCount);
+    var timeout = setTimeout(function() {
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      reject(new Error('Timeout'));
+    }, 15000);
+
+    window[cbName] = function(data) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      if (data.error && !data.ok) {
+        var err = new Error(data.error);
+        err.data = data;
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    };
+
+    var p = Object.assign({}, params, { callback: cbName });
+    if (TOKEN) p.token = TOKEN;
+    var qs = Object.keys(p).map(function(k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]);
+    }).join('&');
+
+    var script = document.createElement('script');
+    script.src = SCRIPT_URL + '?' + qs;
+    script.onerror = function() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      reject(new Error('Network error'));
+    };
+    document.head.appendChild(script);
+  });
 }
 
 // ── Toast ──────────────────────────────────────────────────────
