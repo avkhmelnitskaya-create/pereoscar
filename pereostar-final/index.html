@@ -269,8 +269,7 @@ function loadConfig(){
     document.getElementById('app-ld').style.display='none';
     document.getElementById('app').style.display='block';
     render();setStatus(cfg.event.is_voting_open);
-    // Проверка повторного голосования отключена
-    else if(!cfg.event.is_voting_open){showScr('closed');}
+    if(!cfg.event.is_voting_open){showScr('closed');}
   }).catch(function(){
     document.getElementById('app-ld').style.display='none';
     document.getElementById('app-err').style.display='block';
