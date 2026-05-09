@@ -269,7 +269,7 @@ function loadConfig(){
     document.getElementById('app-ld').style.display='none';
     document.getElementById('app').style.display='block';
     render();setStatus(cfg.event.is_voting_open);
-    if(localStorage.getItem('pero_voted_'+(cfg.event.season||'x'))){showScr('already');}
+    // Проверка повторного голосования отключена
     else if(!cfg.event.is_voting_open){showScr('closed');}
   }).catch(function(){
     document.getElementById('app-ld').style.display='none';
@@ -379,7 +379,7 @@ function submitVote(){
   var team=document.getElementById('f-team').value.trim();
   apiPost({action:'vote',deviceId:DID,voterName:name,voterTeam:team,answers:SEL})
     .then(function(){
-      localStorage.setItem('pero_voted_'+(CFG.event.season||'x'),'1');
+      // 
       document.getElementById('done-name').textContent='Спасибо, '+name+'!';
       showScr('done');
       document.getElementById('vote').scrollIntoView({behavior:'smooth'});
@@ -387,7 +387,7 @@ function submitVote(){
     .catch(function(err){
       btn.disabled=false;btn.textContent='Подтвердить ✓';
       var d=err.data||{};
-      if(d.error==='already_voted'){toast('С этого устройства уже голосовали','terr');localStorage.setItem('pero_voted_'+(CFG.event.season||'x'),'1');showScr('already');}
+      if(d.error==='already_voted'){toast('С этого устройства уже голосовали','terr');showScr('already');}
       else if(d.error==='voting_closed'){toast('Голосование закрыто','terr');showScr('closed');setStatus(false);}
       else if(!navigator.onLine){toast('Нет интернета. Проверь соединение.','terr');}
       else{toast('Ошибка отправки. Попробуй ещё раз.','terr');}
