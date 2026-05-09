@@ -209,7 +209,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(0,0,0,.97);backdrop-filter:
 </div>
 <script>
 // ── URL Google Apps Script ─────────────────────────────────────
-var SCRIPT_URL = '/.netlify/functions/gs'; 
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLuI6N2gO6hUKD11WLpIjcBujKGYZCv8Hdrn-1oq1Cj3DnoVCNeJDudbxSovRsyUWG/exec';
 
 // ── Device ID ──────────────────────────────────────────────────
 function getDeviceId(){var id=localStorage.getItem('pero_did');if(!id){id='D'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);localStorage.setItem('pero_did',id);}return id;}
@@ -218,42 +218,71 @@ var DID=getDeviceId();
 // ── State ──────────────────────────────────────────────────────
 var CFG=null,SEL={},TOKEN=null,rtimer=null;
 
-// ── API через Netlify proxy (решает CORS) ──────────────────────
+// ── API через JSONP — работает без прокси ──────────────────────
+var _cbCount = 0;
 function api(params) {
-  var qs = Object.keys(params).map(function(k) {
-    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
-  }).join('&');
-  if (TOKEN) qs += '&token=' + encodeURIComponent(TOKEN);
-  return fetch(SCRIPT_URL + '?' + qs)
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (d.error && !d.ok) {
-        var err = new Error(d.error);
-        err.data = d;
-        throw err;
+  return new Promise(function(resolve, reject) {
+    var cbName = '_gs_cb_' + (++_cbCount) + '_' + Date.now();
+    var timer = setTimeout(function() {
+      cleanup();
+      reject(new Error('Timeout'));
+    }, 20000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      var s = document.getElementById(cbName);
+      if (s) s.parentNode.removeChild(s);
+    }
+
+    window[cbName] = function(data) {
+      cleanup();
+      if (data && data.error && !data.ok) {
+        var err = new Error(data.error);
+        err.data = data;
+        reject(err);
+      } else {
+        resolve(data);
       }
-      return d;
-    });
+    };
+
+    var p = {};
+    Object.keys(params).forEach(function(k) { p[k] = params[k]; });
+    p.callback = cbName;
+    if (TOKEN) p.token = TOKEN;
+
+    var qs = Object.keys(p).map(function(k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]);
+    }).join('&');
+
+    var script = document.createElement('script');
+    script.id = cbName;
+    script.src = SCRIPT_URL + '?' + qs;
+    script.onerror = function() {
+      cleanup();
+      reject(new Error('Script load error'));
+    };
+    document.head.appendChild(script);
+  });
 }
 
 
-// ── POST запросы через Netlify proxy ───────────────────────────
+// ── POST через JSONP GET (все параметры в URL) ──────────────────
 function apiPost(body) {
-  if (TOKEN) body.token = TOKEN;
-  return fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
-    if (d.error && !d.ok) {
-      var err = new Error(d.error);
-      err.data = d;
-      throw err;
-    }
-    return d;
-  });
+  // Конвертируем объекты в JSON-строки для передачи через GET
+  var params = { action: body.action };
+  if (body.token) params.token = body.token;
+  if (body.password) params.password = body.password;
+  // Данные
+  if (body.deviceId)   params.deviceId   = body.deviceId;
+  if (body.voterName)  params.voterName  = body.voterName;
+  if (body.voterTeam)  params.voterTeam  = body.voterTeam;
+  if (body.answers)    params.answers    = JSON.stringify(body.answers);
+  if (body.event)      params.event      = JSON.stringify(body.event);
+  if (body.films)      params.films      = JSON.stringify(body.films);
+  if (body.nominations) params.nominations = JSON.stringify(body.nominations);
+  if (body.votingRules) params.votingRules = JSON.stringify(body.votingRules);
+  return api(params);
 }
 // ── Toast ──────────────────────────────────────────────────────
 var ttimer;
