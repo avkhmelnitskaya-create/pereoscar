@@ -209,7 +209,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(0,0,0,.97);backdrop-filter:
 </div>
 <script>
 // ── URL Google Apps Script ─────────────────────────────────────
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLuI6N2gO6hUKD11WLpIjcBujKGYZCv8Hdrn-1oq1Cj3DnoVCNeJDudbxSovRsyUWG/exec';
+var SCRIPT_URL = '/.netlify/functions/gs';
 
 // ── Device ID ──────────────────────────────────────────────────
 function getDeviceId(){var id=localStorage.getItem('pero_did');if(!id){id='D'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);localStorage.setItem('pero_did',id);}return id;}
@@ -218,47 +218,43 @@ var DID=getDeviceId();
 // ── State ──────────────────────────────────────────────────────
 var CFG=null,SEL={},TOKEN=null,rtimer=null;
 
-// ── API через JSONP — решает CORS без серверного прокси ────────
-var _cbCount = 0;
+// ── API через Netlify proxy (решает CORS) ──────────────────────
 function api(params) {
-  return new Promise(function(resolve, reject) {
-    var cbName = '_gs_cb_' + (++_cbCount);
-    var timeout = setTimeout(function() {
-      delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      reject(new Error('Timeout'));
-    }, 15000);
-
-    window[cbName] = function(data) {
-      clearTimeout(timeout);
-      delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      if (data.error && !data.ok) {
-        var err = new Error(data.error);
-        err.data = data;
-        reject(err);
-      } else {
-        resolve(data);
+  var qs = Object.keys(params).map(function(k) {
+    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+  if (TOKEN) qs += '&token=' + encodeURIComponent(TOKEN);
+  return fetch(SCRIPT_URL + '?' + qs)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error && !d.ok) {
+        var err = new Error(d.error);
+        err.data = d;
+        throw err;
       }
-    };
-
-    var p = Object.assign({}, params, { callback: cbName });
-    if (TOKEN) p.token = TOKEN;
-    var qs = Object.keys(p).map(function(k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]);
-    }).join('&');
-
-    var script = document.createElement('script');
-    script.src = SCRIPT_URL + '?' + qs;
-    script.onerror = function() {
-      clearTimeout(timeout);
-      delete window[cbName];
-      reject(new Error('Network error'));
-    };
-    document.head.appendChild(script);
-  });
+      return d;
+    });
 }
 
+
+// ── POST запросы через Netlify proxy ───────────────────────────
+function apiPost(body) {
+  if (TOKEN) body.token = TOKEN;
+  return fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.error && !d.ok) {
+      var err = new Error(d.error);
+      err.data = d;
+      throw err;
+    }
+    return d;
+  });
+}
 // ── Toast ──────────────────────────────────────────────────────
 var ttimer;
 function toast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='on '+(type||'');clearTimeout(ttimer);ttimer=setTimeout(function(){el.className='';},3000);}
@@ -381,7 +377,7 @@ function submitVote(){
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
   var name=document.getElementById('f-name').value.trim();
   var team=document.getElementById('f-team').value.trim();
-  api({action:'vote',deviceId:DID,voterName:name,voterTeam:team,answers:JSON.stringify(SEL)})
+  apiPost({action:'vote',deviceId:DID,voterName:name,voterTeam:team,answers:SEL})
     .then(function(){
       localStorage.setItem('pero_voted_'+(CFG.event.season||'x'),'1');
       document.getElementById('done-name').textContent='Спасибо, '+name+'!';
@@ -403,7 +399,7 @@ function openAdm(){document.getElementById('admpanel').classList.add('on');}
 function closeAdm(){document.getElementById('admpanel').classList.remove('on');stopRes();}
 function admLogin(){
   var pw=document.getElementById('apw').value;
-  api({action:'login',password:pw}).then(function(r){
+  apiPost({action:'login',password:pw}).then(function(r){
     TOKEN=r.token;
     document.getElementById('admlgn').style.display='none';
     document.getElementById('admdash').style.display='block';
@@ -411,7 +407,7 @@ function admLogin(){
   }).catch(function(){toast('Неверный пароль','terr');});
 }
 function admAction(act){
-  api({action:act}).then(function(r){
+  apiPost({action:act}).then(function(r){
     var open=r.is_voting_open;setStatus(open);if(CFG)CFG.event.is_voting_open=open;
     toast(open?'Голосование открыто':'Голосование закрыто','tok');
   }).catch(function(){toast('Ошибка','terr');});
@@ -427,7 +423,7 @@ function admExport(fmt){
 }
 function admClear(){
   if(!confirm('Удалить ВСЕ голоса? Это необратимо.'))return;
-  api({action:'clear'}).then(function(){
+  apiPost({action:'clear'}).then(function(){
     toast('Голоса удалены','tok');
     renderRes({total:0,summary:{},recent:[]});
     document.getElementById('s-total').textContent='0';
@@ -499,13 +495,13 @@ function admSaveNoms(){
     var candidates=Array.from(rows).map(function(row){return{name:row.querySelector('[data-f=name]').value.trim(),film_title:row.querySelector('[data-f=film_title]').value.trim()};}).filter(function(c){return c.name;});
     return Object.assign({},orig,{enabled:enabled,candidates:candidates});
   });
-  api({action:'saveConfig',nominations:JSON.stringify(noms)})
+  apiPost({action:'saveConfig',nominations:noms})
     .then(function(){admLoadAll();toast('Номинации сохранены','tok');})
     .catch(function(){toast('Ошибка','terr');});
 }
 function admSaveEvent(){
   var ev={title:document.getElementById('ev-t').value,subtitle:document.getElementById('ev-s').value,season:document.getElementById('ev-se').value,slogan:document.getElementById('ev-sl').value};
-  api({action:'saveConfig',event:JSON.stringify(ev)}).then(function(){admLoadAll();toast('Сохранено','tok');}).catch(function(){toast('Ошибка','terr');});
+  apiPost({action:'saveConfig',event:ev}).then(function(){admLoadAll();toast('Сохранено','tok');}).catch(function(){toast('Ошибка','terr');});
 }
 function renderEditRules(rules){
   var list=document.getElementById('erules');list.innerHTML='';
@@ -515,7 +511,7 @@ function admAddRule(){var list=document.getElementById('erules');var row=documen
 function admSaveRules(){
   var rows=document.querySelectorAll('#erules .ecrow');
   var rules=Array.from(rows).map(function(r){var ins=r.querySelectorAll('input');return{icon:ins[0].value.trim()||'✅',text:ins[1].value.trim()};}).filter(function(r){return r.text;});
-  api({action:'saveConfig',votingRules:JSON.stringify(rules)}).then(function(){admLoadAll();toast('Правила сохранены','tok');}).catch(function(){toast('Ошибка','terr');});
+  apiPost({action:'saveConfig',votingRules:rules}).then(function(){admLoadAll();toast('Правила сохранены','tok');}).catch(function(){toast('Ошибка','terr');});
 }
 loadConfig();
 </script>
